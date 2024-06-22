@@ -1,0 +1,8 @@
+.token
+*.log
+*.old
+*.out
+*.sif
+Mustard/
+old/
+tmp/

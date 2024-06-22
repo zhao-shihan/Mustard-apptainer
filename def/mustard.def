@@ -1,0 +1,63 @@
+Bootstrap: localimage
+From: {{RGB}}
+
+%arguments
+    RGB=
+    MUSTARD_SRC_HOST_DIR=
+    MUSTARD_TIME=
+    MUSTARD_COMMIT=
+
+%files
+    {{MUSTARD_SRC_HOST_DIR}} /opt
+
+%post
+    cd /opt
+    mkdir Mustard-build
+    mv Mustard Mustard-build
+    cd Mustard-build
+
+    for arch in 'x86-64-v4' 'x86-64-v3' 'x86-64-v2'; do
+        VECGEOM_DIR=/opt/$arch/vecgeom
+        export LIBRARY_PATH=$VECGEOM_DIR/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$VECGEOM_DIR/lib:$LD_LIBRARY_PATH
+        export CMAKE_PREFIX_PATH=$VECGEOM_DIR:$CMAKE_PREFIX_PATH
+
+        GEANT4_DIR=/opt/$arch/geant4
+        export PATH=$GEANT4_DIR/bin:$PATH
+        export LIBRARY_PATH=$GEANT4_DIR/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$GEANT4_DIR/lib:$LD_LIBRARY_PATH
+        export CMAKE_PREFIX_PATH=$GEANT4_DIR:$CMAKE_PREFIX_PATH
+
+        ROOT_DIR=/opt/$arch/root
+        export PATH=$ROOT_DIR/bin:$PATH
+        export LIBRARY_PATH=$ROOT_DIR/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=$ROOT_DIR/lib:$LD_LIBRARY_PATH
+        export PYTHONPATH=$ROOT_DIR/lib:$PYTHONPATH
+        export MANPATH=$ROOT_DIR/man:$MANPATH
+        export CMAKE_PREFIX_PATH=$ROOT_DIR:$CMAKE_PREFIX_PATH
+        export JUPYTER_PATH=$ROOT_DIR/etc/notebook:$JUPYTER_PATH
+        export JUPYTER_CONFIG_DIR=$ROOT_DIR/etc/notebook:$JUPYTER_CONFIG_DIR
+        export ROOTSYS=$ROOT_DIR
+        export CLING_STANDARD_PCH=none
+
+        mkdir build
+        cd build
+        cmake -G Ninja ../Mustard -DCMAKE_INSTALL_PREFIX=/opt/$arch/Mustard -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_STANDARD=17 -DCMAKE_CXX_STANDARD=20 -DCMAKE_C_FLAGS="-march=$arch" -DCMAKE_CXX_FLAGS="-march=$arch" -DMUSTARD_USE_STATIC_G4=ON -DMUSTARD_ENABLE_IPO=ON -DUSE_LIBMVEC=ON -DTARGET_ARCHITECTURE=$arch
+        ninja
+        ninja install
+        cd ..
+        rm -r build
+    done
+
+    cd ..
+    rm -rf Mustard-build
+
+%environment
+    MUSTARD_DIR=/opt/$RUNTIME_CPU_ARCH/Mustard
+    export PATH=$MUSTARD_DIR/bin:$PATH
+    export LIBRARY_PATH=$MUSTARD_DIR/lib:$LIBRARY_PATH
+    export LD_LIBRARY_PATH=$MUSTARD_DIR/lib:$LD_LIBRARY_PATH
+    export CMAKE_PREFIX_PATH=$MUSTARD_DIR:$CMAKE_PREFIX_PATH
+
+%labels
+    Mustard {{MUSTARD_TIME}} ({{MUSTARD_COMMIT}})

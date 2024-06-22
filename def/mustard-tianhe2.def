@@ -1,0 +1,37 @@
+Bootstrap: localimage
+From: {{RGB}}
+
+%arguments
+    RGB=
+    MUSTARD_SRC_HOST_DIR=
+    MUSTARD_TIME=
+    MUSTARD_COMMIT=
+
+%files
+    {{MUSTARD_SRC_HOST_DIR}} /opt
+
+%post
+    cd /opt
+    mkdir Mustard-build
+    mv Mustard Mustard-build
+    cd Mustard-build
+
+    mkdir build
+    cd build
+    cmake -G Ninja ../Mustard -DCMAKE_INSTALL_PREFIX=/opt/Mustard -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_STANDARD=17 -DCMAKE_CXX_STANDARD=20 -DCMAKE_C_FLAGS='-march=ivybridge' -DCMAKE_CXX_FLAGS='-march=ivybridge' -DMUSTARD_USE_G4VIS=OFF -DMUSTARD_USE_STATIC_G4=ON -DMUSTARD_ENABLE_IPO=ON -DUSE_LIBMVEC=ON -DTARGET_ARCHITECTURE=ivy-bridge
+    ninja
+    ninja install
+    cd ..
+
+    cd ..
+    rm -rf Mustard-build
+
+%environment
+    MUSTARD_DIR=/opt/Mustard
+    export PATH=$MUSTARD_DIR/bin:$PATH
+    export LIBRARY_PATH=$MUSTARD_DIR/lib:$LIBRARY_PATH
+    export LD_LIBRARY_PATH=$MUSTARD_DIR/lib:$LD_LIBRARY_PATH
+    export CMAKE_PREFIX_PATH=$MUSTARD_DIR:$CMAKE_PREFIX_PATH
+
+%labels
+    Mustard {{MUSTARD_TIME}} ({{MUSTARD_COMMIT}})
